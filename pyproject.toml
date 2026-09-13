@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepvoice-threat-registry"
+version = "0.1.0"
+description = "Deepvoice detection record integrity PoC (scaffold and registry)"
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["backend"]

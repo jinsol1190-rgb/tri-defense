@@ -1,0 +1,12 @@
+.tools/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+out/
+cache/
+broadcast/
+.env
+*.sqlite*
+.DS_Store

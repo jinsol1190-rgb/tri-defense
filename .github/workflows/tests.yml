@@ -1,0 +1,18 @@
+name: Core PoC tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.1
+      - run: PYTHONPATH=backend python -m unittest discover -s tests -v
+      - run: forge fmt --check
+      - run: forge test -vv
