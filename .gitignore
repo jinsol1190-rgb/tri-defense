@@ -10,3 +10,5 @@ broadcast/
 .env
 *.sqlite*
 .DS_Store
+build/
+dist/

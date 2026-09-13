@@ -1,3 +1,10 @@
+> P0 준비 업데이트: 전체 Tri-Defense 목표와 모듈 경계는 AGENTS.md를 따른다.
+> 아래 내용은 기존 claim-record PoC의 데이터 계약이다. 아래의 zkML/자동 차단 제외는
+> 기존 PoC 범위 설명이며 Tri-Defense 요구사항을 제거하지 않는다.
+> 새 개발용 폴더는 문서 placeholder이고 실행 경로에 연결되지 않는다.
+> backend/verification은 기존 미구현 확장점으로 보존하며, 향후 AI 구현은 ai/에 둔다.
+> 환경 및 현재 제약: [P0 준비 보고서](p0-preparation.md).
+
 # 범위와 데이터 계약
 
 현재 구현: 저장소 scaffold, Python 데이터 모델, Solidity Registry, 단위/퍼즈 테스트.

@@ -13,6 +13,5 @@ jobs:
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: v1.8.1
-      - run: PYTHONPATH=backend python -m unittest discover -s tests -v
-      - run: forge fmt --check
-      - run: forge test -vv
+      - run: make setup PYTHON=python
+      - run: make check
