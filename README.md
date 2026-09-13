@@ -1,3 +1,43 @@
+# Tri-Defense
+
+> zkML 기반 탈중앙화 딥보이스 실시간 집단 방어 네트워크
+
+Tri-Defense는 **한 명이 탐지한 딥보이스 보이스피싱 위협을 블록체인을 통해 다른 사용자에게 즉시 공유하여 연쇄 피해를 방지하는 Web3 보안 시스템**입니다.
+
+## 3단계 보안 구조
+
+### 1️⃣ 1차 경량 탐지
+- 온디바이스 AI 기반 위험도 분석
+- 위험도에 따라 2차 정밀 분석 여부 결정
+
+### 2️⃣ 2차 정밀 검증
+- Voiceprint Hash 생성
+- Artifact 분석
+- zkML 기반 AI 연산 무결성 증명
+
+### 3️⃣ 블록체인 집단 방어
+- ThreatRegistry 등록
+- 다른 사용자에게 실시간 전파
+
+---
+
+## 현재 구현 상태 (P0)
+
+✅ Android
+
+✅ Backend
+
+✅ Smart Contract
+
+✅ Dashboard
+
+✅ End-to-End Mock Integration
+
+> 현재는 **P0(Mock 기반 통합)** 상태이며,
+> 실제 AI, zkML, ERC-4337은 멘토링 및 본선 기간에 구현 예정입니다.
+
+---
+
 # Tri-Defense — Integration P0
 
 Source of Truth: [구현 명세 (Codex)](docs/implementation-specification.md). 제안서와 README가 충돌하면 구현 명세를 우선한다.
@@ -64,3 +104,30 @@ Root `make check`는 초기 Python 모델·Contracts 검사이며 전체 모듈 
 ## 남은 범위
 
 실제 AI 및 zkML PoC, 실제 Verifier, ERC-4337/테스트넷, 장기 백그라운드 동기화, 기기별 통화 보호 검증은 별도 작업이다. 현재 Room의 MOCK 캐시는 기본 통화 차단 캐시와 분리되어 있다. 다음 작업은 [통합 보고서의 권장 순서](docs/integration-p0-report.md#remaining-blockers-and-recommended-order)를 검토한 뒤 정한다.
+
+
+---
+
+# Roadmap
+
+## P0 (현재)
+
+- Android 구조
+- Backend API
+- ThreatRegistry
+- Dashboard
+- Mock Integration
+
+## P1 (멘토링)
+
+- 1차 AI
+- 2차 AI
+- Voiceprint Hash
+- zkML
+- ERC-4337
+
+## P2 (본선)
+
+- 실제 AI 적용
+- Testnet 배포
+- End-to-End Demo
