@@ -1,0 +1,84 @@
+{
+  "status": "SAMPLE / MOCK_PROOF; local mechanics verified, NO zkML verification",
+  "generatedAtUtc": "2026-09-13T12:51:13.244245+00:00",
+  "chainId": 31337,
+  "network": "owned ephemeral Anvil; stopped after this run",
+  "rpc": "http://127.0.0.1:52394",
+  "explorer": null,
+  "operator": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+  "toolchain": {
+    "forge": "forge Version: 1.8.1",
+    "solidity": "0.8.24"
+  },
+  "contracts": {
+    "MockVerifier": {
+      "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+      "transactionHash": "0xf82a6dddfc16beece31436c4c009a1a458f9ab12d13b36a8d058dea15e47e1e4",
+      "deploymentBlock": 1,
+      "gasUsed": 290519,
+      "runtimeBytecodeSha256": "0dadb87589729433fd47f8609405c085dece4971797011c311f5bd5d5d8a14aa",
+      "abi": "../abi/MockVerifier.json"
+    },
+    "VerifierAdapter": {
+      "address": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+      "transactionHash": "0xfe42c1d38b1e2b78ad250a496d4a58a8aba3d577e5835db0dc8ba5f0263356b5",
+      "deploymentBlock": 2,
+      "gasUsed": 283641,
+      "runtimeBytecodeSha256": "28ae61d925a5cd8403caa439d47540977e39408c1cc5592bd88df46a34a982d7",
+      "abi": "../abi/VerifierAdapter.json"
+    },
+    "ThreatRegistry": {
+      "address": "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
+      "transactionHash": "0x2b4209f28c9976d1656a661c0142e167abc7bac0a3c404fb72fa0e1dfe27e172",
+      "deploymentBlock": 3,
+      "gasUsed": 865358,
+      "runtimeBytecodeSha256": "afcc12ce5c740d916ac7717832d94641f1cc4c8677527f77d939f4dec52ad4a1",
+      "abi": "../abi/ThreatRegistry.json"
+    }
+  },
+  "threatId": "0xa4aa218f504edf46cd26bb3762a226899464f2ef12471a80afee0fc96708e118",
+  "sourceSha256": {
+    "contracts/src/ThreatRegistry.sol": "5491791b462d1e1dca2cc72ffc0ef337585eb483ebd948a93dbf18777e0ee799",
+    "contracts/src/VerifierAdapter.sol": "ba2dc0ab23ba5e2683bcb0682ba77bdaa89fc186b73005674870f1591001c27f",
+    "contracts/src/interfaces/IProofVerifier.sol": "9f8643591584e117fb3ad9348e5b73be6894496be46ce7b981672c113ee6186f",
+    "contracts/src/mocks/MockVerifier.sol": "8d4a134b527263c412a56fc53e93ad02d2bbbb93fecf6530dc34e95b0fae9ac4"
+  },
+  "fixture": {
+    "circuitId": 1,
+    "minRiskScore": 7000,
+    "riskScore": 9000,
+    "proof": "MOCK_PROOF fixture v1",
+    "voiceprintSource": "keccak256 of SAMPLE text; NOT model output",
+    "syntheticNumber": "+12025550123",
+    "phoneKey": "0x4b3794f2fd7de0c6b03ccbe660740766c874950418b6e268da7d3dded1c86024",
+    "numberEvidence": "SAMPLE local number fixture v1",
+    "proofBytes": 21
+  },
+  "events": [
+    {
+      "function": "registerThreat(bytes32,uint16,uint256,bytes,uint256[])",
+      "transactionHash": "0x7ba51996200c40901179cfec77a3073bbd6232cb0390d0e4fcf3f8f484a63d4c",
+      "blockNumber": 5,
+      "gasUsed": 175270,
+      "topics": [
+        "0xef06246ff2d387f202fbf8de8a1facdbfe74ef885207c533afa724aaa9ac7095",
+        "0xa4aa218f504edf46cd26bb3762a226899464f2ef12471a80afee0fc96708e118",
+        "0x10cbcf37c185afcb2b1575fafc2d0a8f5f116ba0074fa32a370148d52a699da3"
+      ],
+      "data": "0x0000000000000000000000000000000000000000000000000000000000002328000000000000000000000000000000000000000000000000000000006aa69c40"
+    },
+    {
+      "function": "promoteToBlacklist(bytes32,bytes32)",
+      "transactionHash": "0x9bf0969117ef67caa1e94a2e85fc21e64a85cc255d5de0464bb287421265a344",
+      "blockNumber": 6,
+      "gasUsed": 48607,
+      "topics": [
+        "0xece41a890aa8360325ce01385671ec90e5171e5893833848971355d31ca2df4c",
+        "0xa4aa218f504edf46cd26bb3762a226899464f2ef12471a80afee0fc96708e118",
+        "0x4b3794f2fd7de0c6b03ccbe660740766c874950418b6e268da7d3dded1c86024"
+      ],
+      "data": "0x"
+    }
+  ],
+  "liveRecordRead": "(0xa4aa218f504edf46cd26bb3762a226899464f2ef12471a80afee0fc96708e118, 0x10cbcf37c185afcb2b1575fafc2d0a8f5f116ba0074fa32a370148d52a699da3, 9000, 1789303872 [1.789e9], 0x4d4f434b5f50524f4f462066697874757265207631)"
+}

@@ -2,226 +2,308 @@
 pragma solidity 0.8.24;
 
 import {ThreatRegistry} from "../src/ThreatRegistry.sol";
+import {VerifierAdapter} from "../src/VerifierAdapter.sol";
+import {MockVerifier} from "../src/mocks/MockVerifier.sol";
 
-// Minimal official Foundry cheatcode interface; no third-party test dependency.
+// Minimal Foundry cheatcodes; no external Solidity dependencies.
 interface Vm {
+    struct Log {
+        bytes32[] topics;
+        bytes data;
+        address emitter;
+    }
     function prank(address caller) external;
-    function expectRevert(bytes calldata revertData) external;
+    function expectRevert(bytes calldata data) external;
     function expectRevert(bytes4 selector) external;
-    function expectEmit(bool topic1, bool topic2, bool topic3, bool data, address emitter) external;
-    function assume(bool condition) external;
+    function expectEmit(bool, bool, bool, bool, address) external;
+    function chainId(uint256) external;
+    function warp(uint256) external;
+    function recordLogs() external;
+    function getRecordedLogs() external returns (Log[] memory);
 }
 
 contract ThreatRegistryTest {
     Vm private constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    uint256 private constant CIRCUIT = 1; // SAMPLE envelope, not an EZKL circuit identifier.
+    bytes32 private constant HASH = keccak256("SAMPLE voiceprint fixture; no model output");
+    bytes32 private constant PHONE = keccak256("+12025550123"); // Synthetic fixture, never contacted.
+    bytes32 private constant EVIDENCE = keccak256("SAMPLE local number fixture v1");
+    bytes private constant PROOF = bytes("MOCK_PROOF fixture v1");
+    MockVerifier private verifier;
+    VerifierAdapter private adapter;
     ThreatRegistry private registry;
-    bytes32 private constant ID = bytes32(uint256(1));
-    uint64 private constant TIMESTAMP = 1_800_000_000;
-    string private constant VERSION = "MOCK-fixed-v1";
-    bytes32 private audioHash;
 
     event ThreatRegistered(
-        bytes32 indexed threatId,
-        bytes32 indexed audioHash,
-        uint8 aiResult,
-        uint8 riskScore,
-        string modelVersion,
-        uint64 timestamp,
-        ThreatRegistry.Status status
+        bytes32 indexed threatId, bytes32 indexed voiceprintHash, uint16 riskScore, uint64 registeredAt
     );
+    event BlacklistPromoted(bytes32 indexed threatId, bytes32 indexed phoneKey);
 
     function setUp() public {
-        registry = new ThreatRegistry(address(this));
-        audioHash = sha256(bytes("synthetic-test-audio"));
+        VM.chainId(31337);
+        verifier = new MockVerifier(address(this));
+        adapter = new VerifierAdapter(address(verifier), CIRCUIT);
+        registry = _newRegistry(7000);
     }
 
-    function _register() private {
-        registry.registerThreat(ID, audioHash, 1, 90, VERSION, TIMESTAMP);
+    function _newRegistry(uint16 threshold) private returns (ThreatRegistry) {
+        return new ThreatRegistry(adapter, threshold, address(this), PHONE, EVIDENCE);
     }
 
-    function _assertOriginal() private view {
-        ThreatRegistry.ThreatRecord memory r = registry.getThreat(ID);
-        require(r.threatId == ID, "threatId changed");
-        require(r.audioHash == audioHash, "audioHash changed");
-        require(r.aiResult == 1, "aiResult changed");
-        require(r.riskScore == 90, "riskScore changed");
-        require(keccak256(bytes(r.modelVersion)) == keccak256(bytes(VERSION)), "modelVersion changed");
-        require(r.timestamp == TIMESTAMP, "timestamp changed");
-        require(r.status == ThreatRegistry.Status.SUSPECTED, "status changed");
-        require(registry.getThreatIdByAudioHash(audioHash) == ID, "hash index changed");
+    function _inputs(ThreatRegistry target, address sender, uint256 nonce, bytes32 hash, uint16 score)
+        private
+        view
+        returns (uint256[] memory p)
+    {
+        p = new uint256[](8);
+        p[0] = CIRCUIT;
+        p[1] = score;
+        p[2] = uint256(hash) >> 128;
+        p[3] = uint128(uint256(hash));
+        p[4] = block.chainid;
+        p[5] = uint160(address(target));
+        p[6] = uint160(sender);
+        p[7] = nonce;
     }
 
-    function testRegisterAndReadAllSevenFields() public {
-        _register();
-        require(registry.REGISTRAR() == address(this), "registrar");
-        require(registry.threatExists(ID), "existence");
-        _assertOriginal();
+    function _id(ThreatRegistry target, address sender, uint256 nonce) private view returns (bytes32) {
+        return keccak256(abi.encode(block.chainid, address(target), sender, nonce));
     }
 
-    function testEventContainsExactRecord() public {
+    function _register(uint256 nonce) private returns (bytes32) {
+        uint256[] memory p = _inputs(registry, address(this), nonce, HASH, 9000);
+        verifier.setFixture(PROOF, p, true);
+        return registry.registerThreat(HASH, 9000, nonce, PROOF, p);
+    }
+
+    function _assertRejected(uint256[] memory p, bytes memory proof, bytes4 errorSelector) private {
+        VM.recordLogs();
+        VM.expectRevert(errorSelector);
+        registry.registerThreat(HASH, 9000, 1, proof, p);
+        require(VM.getRecordedLogs().length == 0, "failure emitted logs");
+        bytes32 id = _id(registry, address(this), 1);
+        require(!registry.exists(id) && !registry.usedSubmission(id), "failure persisted");
+        require(!registry.isBlacklisted(PHONE), "failure promoted number");
+    }
+
+    function testRegistrationStoresFullRecordAndEmitsExactEvent() public {
+        VM.warp(1_800_000_000);
+        bytes32 expected = _id(registry, address(this), 1);
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        verifier.setFixture(PROOF, p, true);
         VM.expectEmit(true, true, false, true, address(registry));
-        emit ThreatRegistered(ID, audioHash, 1, 90, VERSION, TIMESTAMP, ThreatRegistry.Status.SUSPECTED);
-        _register();
+        emit ThreatRegistered(expected, HASH, 9000, 1_800_000_000);
+        require(registry.registerThreat(HASH, 9000, 1, PROOF, p) == expected, "deterministic ID");
+        ThreatRegistry.ThreatRecord memory r = registry.getThreat(expected);
+        require(r.threatId == expected && r.voiceprintHash == HASH && r.riskScore == 9000, "fields");
+        require(r.registeredAt == 1_800_000_000 && keccak256(r.zkProof) == keccak256(PROOF), "time/proof");
+        require(registry.exists(expected) && registry.usedSubmission(expected), "indexes");
+        require(!registry.isBlacklisted(PHONE), "registration must not promote");
     }
 
-    function testZeroRegistrarRejected() public {
-        VM.expectRevert(ThreatRegistry.InvalidRegistrar.selector);
-        new ThreatRegistry(address(0));
-    }
-
-    function testDesignatedRegistrarCanDifferFromDeployer() public {
-        address writer = address(0xBEEF);
-        ThreatRegistry other = new ThreatRegistry(writer);
-        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.Unauthorized.selector, address(this)));
-        other.registerThreat(ID, audioHash, 1, 90, VERSION, TIMESTAMP);
-        VM.prank(writer);
-        other.registerThreat(ID, audioHash, 1, 90, VERSION, TIMESTAMP);
-        require(other.threatExists(ID), "designated registrar could not write");
-    }
-
-    function testFuzzUnauthorizedCannotWrite(address caller) public {
-        VM.assume(caller != address(this));
-        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.Unauthorized.selector, caller));
-        VM.prank(caller);
-        registry.registerThreat(ID, audioHash, 1, 90, VERSION, TIMESTAMP);
-        require(!registry.threatExists(ID), "unauthorized write persisted");
-        require(registry.getThreatIdByAudioHash(audioHash) == bytes32(0), "unauthorized index persisted");
-    }
-
-    function testDuplicateIdRejectedAndOriginalPreserved() public {
-        _register();
-        bytes32 otherHash = sha256(bytes("other audio"));
-        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.DuplicateThreatId.selector, ID));
-        registry.registerThreat(ID, otherHash, 1, 1, "another-model", 2);
-        _assertOriginal();
-        require(registry.getThreatIdByAudioHash(otherHash) == bytes32(0), "orphan index");
-    }
-
-    function testDuplicateHashRejectedAcrossModelsAndOriginalPreserved() public {
-        _register();
-        bytes32 otherId = bytes32(uint256(2));
-        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.DuplicateAudioHash.selector, audioHash, ID));
-        registry.registerThreat(otherId, audioHash, 1, 10, "another-model", 2);
-        _assertOriginal();
-        require(!registry.threatExists(otherId), "duplicate hash created record");
-    }
-
-    function testIdenticalRetryRejected() public {
-        _register();
-        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.DuplicateThreatId.selector, ID));
-        _register();
-        _assertOriginal();
-    }
-
-    function testMissingRecordReverts() public {
-        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.ThreatNotFound.selector, ID));
-        registry.getThreat(ID);
-    }
-
-    function testMissingHashAndZeroSentinels() public view {
-        require(!registry.threatExists(ID), "missing ID exists");
-        require(!registry.threatExists(bytes32(0)), "zero ID exists");
-        require(registry.getThreatIdByAudioHash(audioHash) == bytes32(0), "missing hash exists");
-        require(registry.getThreatIdByAudioHash(bytes32(0)) == bytes32(0), "zero hash exists");
-    }
-
-    function testZeroThreatIdRejected() public {
-        VM.expectRevert(ThreatRegistry.InvalidThreatId.selector);
-        registry.registerThreat(bytes32(0), audioHash, 1, 90, VERSION, TIMESTAMP);
-    }
-
-    function testZeroAudioHashRejected() public {
-        VM.expectRevert(ThreatRegistry.InvalidAudioHash.selector);
-        registry.registerThreat(ID, bytes32(0), 1, 90, VERSION, TIMESTAMP);
-    }
-
-    function testFuzzNonDeepvoiceResultRejected(uint8 result) public {
-        VM.assume(result != 1);
-        VM.expectRevert(ThreatRegistry.InvalidAIResult.selector);
-        registry.registerThreat(ID, audioHash, result, 90, VERSION, TIMESTAMP);
-        require(!registry.threatExists(ID), "invalid result persisted");
-    }
-
-    function testFuzzOutOfRangeScoreRejected(uint8 score) public {
-        VM.assume(score > 100);
-        VM.expectRevert(ThreatRegistry.InvalidRiskScore.selector);
-        registry.registerThreat(ID, audioHash, 1, score, VERSION, TIMESTAMP);
-        require(!registry.threatExists(ID), "invalid score persisted");
-    }
-
-    function testScoreAndTimestampBoundariesAccepted() public {
-        registry.registerThreat(ID, audioHash, 1, 0, VERSION, 1);
-        registry.registerThreat(bytes32(uint256(2)), sha256(bytes("second")), 1, 100, VERSION, type(uint64).max);
-        require(registry.getThreat(ID).riskScore == 0, "zero score");
-        require(registry.getThreat(ID).timestamp == 1, "min timestamp");
-        ThreatRegistry.ThreatRecord memory r = registry.getThreat(bytes32(uint256(2)));
-        require(r.riskScore == 100 && r.timestamp == type(uint64).max, "upper boundaries");
-    }
-
-    function testEmptyModelVersionRejected() public {
-        VM.expectRevert(ThreatRegistry.InvalidModelVersion.selector);
-        registry.registerThreat(ID, audioHash, 1, 90, "", TIMESTAMP);
-    }
-
-    function testWhitespaceModelVersionRejected() public {
-        VM.expectRevert(ThreatRegistry.InvalidModelVersion.selector);
-        registry.registerThreat(ID, audioHash, 1, 90, " \t\n", TIMESTAMP);
-    }
-
-    function testOverlongModelVersionRejected() public {
-        VM.expectRevert(ThreatRegistry.InvalidModelVersion.selector);
-        registry.registerThreat(ID, audioHash, 1, 90, string(new bytes(129)), TIMESTAMP);
-    }
-
-    function testMaximumModelVersionAccepted() public {
-        bytes memory version = new bytes(128);
-        for (uint256 i = 0; i < version.length; ++i) {
-            version[i] = 0x61;
+    function testLongProofStoredWithoutTruncation() public {
+        bytes memory proof = new bytes(128); // MOCK_PROOF exercises multi-slot storage.
+        for (uint256 i = 0; i < proof.length; ++i) {
+            proof[i] = bytes1(uint8(i));
         }
-        registry.registerThreat(ID, audioHash, 1, 90, string(version), TIMESTAMP);
-        require(bytes(registry.getThreat(ID).modelVersion).length == 128, "max version length");
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        verifier.setFixture(proof, p, true);
+        bytes32 id = registry.registerThreat(HASH, 9000, 1, proof, p);
+        bytes memory stored = registry.getThreat(id).zkProof;
+        require(stored.length == 128 && keccak256(stored) == keccak256(proof), "full proof storage");
     }
 
-    function testUtf8VersionByteLimit() public {
-        bytes memory unit = bytes(unicode"가");
-        bytes memory version = new bytes(129);
-        for (uint256 i = 0; i < version.length; ++i) {
-            version[i] = unit[i % 3];
+    function testUnknownAndTamperedProofsFailWithoutStateOrEvents() public {
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        _assertRejected(p, PROOF, ThreatRegistry.InvalidProof.selector);
+        verifier.setFixture(PROOF, p, true);
+        _assertRejected(p, bytes("MOCK_PROOF tampered"), ThreatRegistry.InvalidProof.selector);
+        _assertRejected(p, bytes(""), ThreatRegistry.InvalidProof.selector);
+        _register(1); // A failed attempt did not consume the nonce.
+    }
+
+    function testChangedPublicInputInvalidatesFixture() public {
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        verifier.setFixture(PROOF, p, true);
+        p[1]++;
+        _assertRejected(p, PROOF, ThreatRegistry.InvalidProof.selector);
+    }
+
+    function testEveryBindingMismatchRejectedEvenIfVerifierAcceptsFixture() public {
+        for (uint256 i = 1; i < 8; ++i) {
+            uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+            p[i]++;
+            verifier.setFixture(PROOF, p, true);
+            _assertRejected(p, PROOF, ThreatRegistry.PublicInputMismatch.selector);
         }
-        VM.expectRevert(ThreatRegistry.InvalidModelVersion.selector);
-        registry.registerThreat(ID, audioHash, 1, 90, string(version), TIMESTAMP);
     }
 
-    function testZeroTimestampRejected() public {
-        VM.expectRevert(ThreatRegistry.InvalidTimestamp.selector);
-        registry.registerThreat(ID, audioHash, 1, 90, VERSION, 0);
+    function testWrongCircuitAndWrongInputLengthRejected() public {
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        p[0] = 2;
+        verifier.setFixture(PROOF, p, true);
+        _assertRejected(p, PROOF, ThreatRegistry.InvalidProof.selector);
+        for (uint256 n = 0; n <= 9; ++n) {
+            if (n == 8) continue;
+            p = new uint256[](n);
+            if (n > 0) p[0] = CIRCUIT;
+            verifier.setFixture(PROOF, p, true);
+            _assertRejected(p, PROOF, ThreatRegistry.InvalidProof.selector);
+        }
     }
 
-    function testPublicReadsDoNotRequireRegistrar() public {
-        _register();
-        VM.prank(address(0xBEEF));
-        require(registry.getThreat(ID).riskScore == 90, "public record read");
-        VM.prank(address(0xBEEF));
-        require(registry.threatExists(ID), "public existence read");
-        VM.prank(address(0xBEEF));
-        require(registry.getThreatIdByAudioHash(audioHash) == ID, "public hash read");
+    function testDuplicateCannotOverwriteOriginal() public {
+        bytes32 id = _register(1);
+        uint256[] memory p = _inputs(registry, address(this), 1, bytes32(uint256(2)), 8000);
+        verifier.setFixture(PROOF, p, true);
+        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.DuplicateSubmission.selector, id));
+        registry.registerThreat(bytes32(uint256(2)), 8000, 1, PROOF, p);
+        require(registry.getThreat(id).voiceprintHash == HASH && registry.getThreat(id).riskScore == 9000, "overwrite");
     }
 
-    function testFuzzRoundTrip(bytes32 id, bytes32 hash, uint8 score, uint64 timestamp) public {
-        VM.assume(id != bytes32(0) && hash != bytes32(0) && timestamp != 0);
-        score = score % 101;
-        registry.registerThreat(id, hash, 1, score, VERSION, timestamp);
+    function testSameVoiceprintCanHaveMultipleIncidents() public {
+        bytes32 first = _register(1);
+        bytes32 second = _register(2);
+        require(first != second && registry.exists(first) && registry.exists(second), "multiple incidents");
+    }
+
+    function testCrossAccountReplayRejectedButIndependentSameNonceAllowed() public {
+        _register(1);
+        address other = address(0xBEEF);
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        VM.expectRevert(ThreatRegistry.PublicInputMismatch.selector);
+        VM.prank(other);
+        registry.registerThreat(HASH, 9000, 1, PROOF, p);
+        p = _inputs(registry, other, 1, HASH, 9000);
+        verifier.setFixture(PROOF, p, true);
+        VM.prank(other);
+        bytes32 id = registry.registerThreat(HASH, 9000, 1, PROOF, p);
+        require(id == _id(registry, other, 1), "account domain");
+    }
+
+    function testCrossRegistryReplayRejected() public {
+        _register(1);
+        ThreatRegistry other = _newRegistry(7000);
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        VM.expectRevert(ThreatRegistry.PublicInputMismatch.selector);
+        other.registerThreat(HASH, 9000, 1, PROOF, p);
+        require(!other.exists(_id(other, address(this), 1)), "cross registry state");
+    }
+
+    function testCrossChainReplayFailsClosed() public {
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        verifier.setFixture(PROOF, p, true);
+        VM.chainId(31338);
+        _assertRejected(p, PROOF, ThreatRegistry.InvalidProof.selector);
+    }
+
+    function testLowRiskRejectedAndBoundaryAccepted() public {
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 6999);
+        verifier.setFixture(PROOF, p, true);
+        VM.expectRevert(ThreatRegistry.BelowRiskThreshold.selector);
+        registry.registerThreat(HASH, 6999, 1, PROOF, p);
+        p[1] = 7000;
+        verifier.setFixture(PROOF, p, true);
+        registry.registerThreat(HASH, 7000, 1, PROOF, p);
+    }
+
+    function testFuzzRoundTrip(bytes32 hash, uint16 score, uint256 nonce) public {
+        if (hash == bytes32(0)) hash = HASH;
+        score = uint16(7000 + uint256(score) % 3001);
+        uint256[] memory p = _inputs(registry, address(this), nonce, hash, score);
+        verifier.setFixture(PROOF, p, true);
+        bytes32 id = registry.registerThreat(hash, score, nonce, PROOF, p);
         ThreatRegistry.ThreatRecord memory r = registry.getThreat(id);
-        require(r.threatId == id && r.audioHash == hash, "identifiers");
-        require(r.aiResult == 1 && r.riskScore == score, "inference claim");
-        require(keccak256(bytes(r.modelVersion)) == keccak256(bytes(VERSION)), "version");
-        require(r.timestamp == timestamp && r.status == ThreatRegistry.Status.SUSPECTED, "time/status");
-        require(registry.getThreatIdByAudioHash(hash) == id, "hash lookup");
+        require(
+            r.threatId == _id(registry, address(this), nonce) && r.voiceprintHash == hash && r.riskScore == score,
+            "round trip"
+        );
     }
 
-    function testSecondRecordDoesNotChangeFirst() public {
-        _register();
-        registry.registerThreat(bytes32(uint256(2)), sha256(bytes("second")), 1, 50, "MOCK-v2", 123);
-        _assertOriginal();
+    function testFuzzOutOfRangeScoresRejected(uint16 seed) public {
+        uint16 score = uint16(10001 + uint256(seed) % 55535);
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, score);
+        VM.expectRevert(ThreatRegistry.InvalidRiskScore.selector);
+        registry.registerThreat(HASH, score, 1, PROOF, p);
+    }
+
+    function testZeroHashRejected() public {
+        uint256[] memory p = _inputs(registry, address(this), 1, bytes32(0), 9000);
+        VM.expectRevert(ThreatRegistry.InvalidVoiceprintHash.selector);
+        registry.registerThreat(bytes32(0), 9000, 1, PROOF, p);
+    }
+
+    function testScoreZeroAndMaximumRepresentableWithConfiguredThreshold() public {
+        registry = _newRegistry(0);
+        uint256[] memory p = _inputs(registry, address(this), 0, HASH, 0);
+        verifier.setFixture(PROOF, p, true);
+        registry.registerThreat(HASH, 0, 0, PROOF, p);
+        p = _inputs(registry, address(this), type(uint256).max, HASH, 10000);
+        verifier.setFixture(PROOF, p, true);
+        registry.registerThreat(HASH, 10000, type(uint256).max, PROOF, p);
+    }
+
+    function testTimestampOverflowRejected() public {
+        VM.warp(uint256(type(uint64).max) + 1);
+        uint256[] memory p = _inputs(registry, address(this), 1, HASH, 9000);
+        verifier.setFixture(PROOF, p, true);
+        _assertRejected(p, PROOF, ThreatRegistry.TimestampOverflow.selector);
+    }
+
+    function testMissingRecordRejected() public {
+        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.ThreatNotFound.selector, bytes32(0)));
+        registry.getThreat(bytes32(0));
+    }
+
+    function testSyntheticNumberPromotionRequiresSeparateAuthorizedTransaction() public {
+        bytes32 id = _register(1);
+        require(!registry.isBlacklisted(PHONE), "automatic promotion");
+        require(registry.TEST_NUMBER_EVIDENCE() == EVIDENCE, "evidence");
+        VM.expectEmit(true, true, false, true, address(registry));
+        emit BlacklistPromoted(id, PHONE);
+        registry.promoteToBlacklist(id, PHONE);
+        require(registry.isBlacklisted(PHONE), "promotion");
+        VM.expectRevert(ThreatRegistry.AlreadyBlacklisted.selector);
+        registry.promoteToBlacklist(id, PHONE);
+    }
+
+    function testFuzzUnauthorizedPromotionRejected(address caller) public {
+        if (caller == address(this)) return;
+        bytes32 id = _register(1);
+        VM.expectRevert(ThreatRegistry.Unauthorized.selector);
+        VM.prank(caller);
+        registry.promoteToBlacklist(id, PHONE);
+        require(!registry.isBlacklisted(PHONE), "unauthorized promotion");
+    }
+
+    function testSpoofedOrUnapprovedNumberNeverPromoted() public {
+        bytes32 id = _register(1);
+        bytes32 unrelated = keccak256("SAMPLE unrelated spoofed number key");
+        VM.recordLogs();
+        VM.expectRevert(ThreatRegistry.UnapprovedTestNumber.selector);
+        registry.promoteToBlacklist(id, unrelated);
+        require(VM.getRecordedLogs().length == 0, "failed promotion logs");
+        require(!registry.isBlacklisted(unrelated) && !registry.isBlacklisted(PHONE), "spoofed number");
+    }
+
+    function testPromotionRequiresExistingThreatAndLocalChain() public {
+        VM.expectRevert(abi.encodeWithSelector(ThreatRegistry.ThreatNotFound.selector, bytes32(0)));
+        registry.promoteToBlacklist(bytes32(0), PHONE);
+        bytes32 id = _register(1);
+        VM.chainId(84532);
+        VM.expectRevert(ThreatRegistry.LocalPromotionOnly.selector);
+        registry.promoteToBlacklist(id, PHONE);
+    }
+
+    function testInvalidRegistryConfigurationRejected() public {
+        VM.expectRevert(ThreatRegistry.InvalidConfiguration.selector);
+        new ThreatRegistry(VerifierAdapter(address(0)), 7000, address(this), PHONE, EVIDENCE);
+        VM.expectRevert(ThreatRegistry.InvalidConfiguration.selector);
+        _newRegistry(10001);
+        VM.expectRevert(ThreatRegistry.InvalidConfiguration.selector);
+        new ThreatRegistry(adapter, 7000, address(0), PHONE, EVIDENCE);
+        VM.expectRevert(ThreatRegistry.InvalidConfiguration.selector);
+        new ThreatRegistry(adapter, 7000, address(this), bytes32(0), EVIDENCE);
+        VM.expectRevert(ThreatRegistry.InvalidConfiguration.selector);
+        new ThreatRegistry(adapter, 7000, address(this), PHONE, bytes32(0));
     }
 }
