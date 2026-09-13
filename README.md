@@ -6,16 +6,16 @@ Tri-Defense는 **한 명이 탐지한 딥보이스 보이스피싱 위협을 블
 
 ## 3단계 보안 구조
 
-### 1️⃣ 1차 경량 탐지
+### 1. 1차 경량 탐지
 - 온디바이스 AI 기반 위험도 분석
 - 위험도에 따라 2차 정밀 분석 여부 결정
 
-### 2️⃣ 2차 정밀 검증
+### 2. 2차 정밀 검증
 - Voiceprint Hash 생성
 - Artifact 분석
 - zkML 기반 AI 연산 무결성 증명
 
-### 3️⃣ 블록체인 집단 방어
+### 3. 블록체인 집단 방어
 - ThreatRegistry 등록
 - 다른 사용자에게 실시간 전파
 
@@ -24,13 +24,9 @@ Tri-Defense는 **한 명이 탐지한 딥보이스 보이스피싱 위협을 블
 ## 현재 구현 상태 (P0)
 
 ✅ Android
-
 ✅ Backend
-
 ✅ Smart Contract
-
 ✅ Dashboard
-
 ✅ End-to-End Mock Integration
 
 > 현재는 **P0(Mock 기반 통합)** 상태이며,
