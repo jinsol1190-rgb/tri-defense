@@ -1,129 +1,85 @@
-# Tri-Defense
+# Tri-Defense — 초기 PoC 제출 소스코드
 
-> zkML 기반 탈중앙화 딥보이스 실시간 집단 방어 네트워크
+> 한 명의 딥보이스 탐지를 다른 사용자의 방어로 연결하는 3단계 보안 네트워크
 
-Tri-Defense는 **한 명이 탐지한 딥보이스 보이스피싱 위협을 블록체인을 통해 다른 사용자에게 즉시 공유하여 연쇄 피해를 방지하는 Web3 보안 시스템**입니다.
+이 저장소는 해커톤 **초기 구현(P0)** 결과입니다. Android·Backend·스마트 컨트랙트·Dashboard의 **로컬 MOCK 통합**과 발표용 **Android 사용자 경험 데모**를 포함합니다. 완성된 보안 서비스가 아닙니다.
 
-## 3단계 보안 구조
+**실제 AI 추론, zkML 증명 생성·암호학적 검증, ERC-4337, 실통화 차단, 운영 배포는 미구현입니다.** 화면의 점수·음성 지문·Proof·보호 결과는 실제 탐지 성능이나 실제 보호를 입증하지 않습니다.
 
-### 1. 1차 경량 탐지
-- 온디바이스 AI 기반 위험도 분석
-- 위험도에 따라 2차 정밀 분석 여부 결정
+[구현 명세 — Source of Truth](docs/implementation-specification.md) · [제출 안내·검증 결과](docs/submission-readiness.md) · [로컬 통합 보고서](docs/integration-p0-report.md)
 
-### 2. 2차 정밀 검증
-- Voiceprint Hash 생성
-- Artifact 분석
-- zkML 기반 AI 연산 무결성 증명
+## 심사위원용 빠른 안내
 
-### 3. 블록체인 집단 방어
-- ThreatRegistry 등록
-- 다른 사용자에게 실시간 전파
+| 확인할 내용 | 위치 |
+| --- | --- |
+| 사용자 A: 통화 중 게이지 → 경고 → 공유 결과 | [화면 4장](android/docs/demo/README.md) · [전체 시연 영상](android/docs/demo/tri-defense-ui-demo.mp4) |
+| 사용자 B: 등록 번호 차단 알림 / 변경 번호 경고 | [MOCK 콘셉트 화면 2장](android/docs/protection-demo/README.md) |
+| Android UI 소스 | [ui/demo/](android/app/src/main/java/org/tridefense/android/ui/demo/) |
+| 실제 로컬 API·EVM·이벤트·Room 통합 재현 | [integration/README.md](integration/README.md) |
+| 모듈별 소스·실행 방법 | [Android](android/README.md) · [Contracts](contracts/README.md) · [Backend](backend/README.md) · [Dashboard](dashboard/README.md) |
 
----
+Android 데모는 앱 안에서 실행되는 **독립적인 MOCK 와이어프레임**입니다. 실제 시스템 전화 앱이 아니며, 아래의 로컬 Backend/체인 통합 경로를 호출하지 않습니다. 발표용 시연과 실제 연동 검증을 구분합니다.
 
-## 현재 구현 상태 (P0)
+## 목표로 하는 3단계 흐름
 
-✅ Android
-✅ Backend
-✅ Smart Contract
-✅ Dashboard
-✅ End-to-End Mock Integration
+1. **경량 탐지:** 사용 가능한 음성 입력으로 위험 점수를 표시합니다. 0.5초는 실제 모델에서 검증할 목표이며, 현재 데모는 0.2초부터 MOCK 게이지를 표시합니다.
+2. **정밀 분석:** 음성 특징과 Voiceprint Hash를 분석하고 사용자에게 경고합니다. 경고는 증명·체인 확인을 기다리지 않습니다.
+3. **검증 후 공유:** 지정 연산의 증명을 검증한 위협 정보를 ThreatRegistry에 등록하고 다른 사용자에게 동기화합니다. 도용된 지인의 번호는 제외하고, 번호 차단 목록 승격에는 별도 검증이 필요합니다.
 
-> 현재는 **P0(Mock 기반 통합)** 상태이며,
-> 실제 AI, zkML, ERC-4337은 멘토링 및 본선 기간에 구현 예정입니다.
+실제 지문 대조, 번호 승격 정책, 실통화 입력·차단, 지연시간은 검증 전 완료로 주장하지 않습니다. zkML은 범죄 여부나 음성 출처를 확정하는 기술이 아닙니다.
 
----
+## 현재 구현 범위
 
-# Tri-Defense — Integration P0
-
-Source of Truth: [구현 명세 (Codex)](docs/implementation-specification.md). 제안서와 README가 충돌하면 구현 명세를 우선한다.
-
-**로컬 MOCK 통합 완료:** Android 디버그 앱 → Backend API → VerifierAdapter / MockVerifier → ThreatRegistry → 이벤트 → Dashboard 및 Android Room.
-Android 에뮬레이터가 실제 HTTP 요청을 보내고, 로컬 EVM에서 발생한 이벤트를 두 클라이언트가 조회하는 경로를 검증했다.
-AI·zkML·ERC-4337·실제 통화 보호는 구현하지 않았다. 전체 명세의 완료를 의미하지 않는다.
-
-[통합 보고서 · 시퀀스 다이어그램 · 남은 차단 요인](docs/integration-p0-report.md) · [실행 및 테스트](integration/README.md)
-
-## 모듈 상태
-
-| 모듈 | 구분 | 현재 상태 |
+| 모듈 | 구현된 범위 | 제한 |
 | --- | --- | --- |
-| [android/](android/README.md) | REAL 연결 / SAMPLE 입력 | Kotlin·Room·CallScreeningService scaffold, debug 전용 MOCK 제출·Registry 동기화. 통화 정책은 allow-all |
-| [backend/](backend/README.md) | REAL API / MOCK_PROOF | 제출·상태·Registry·이벤트 API, 생성 ABI 사용, 로컬 트랜잭션 |
-| [contracts/](contracts/README.md) | REAL 로컬 EVM / MOCK 검증 | ThreatRegistry, VerifierAdapter, 정확한 fixture만 허용하는 MockVerifier, 배포·ABI |
-| [dashboard/](dashboard/README.md) | REAL 조회 / MOCK_PROOF 표시 | React + Vite, Registry·이벤트·상세·제출 상태, 별도 MOCK 표시 fixture |
-| ai/ | SAMPLE scaffold | 전처리·경량/정밀 모델·voiceprint·평가 역할 문서만 존재 |
-| [shared/](shared/README.md) | SAMPLE scaffold / 통합 fixture 계약 | 기존 DTO·스키마 폴더와 [로컬 fixture 규약](shared/fixtures/README.md) |
-| docs/ | REAL 문서 | 구현 명세, 과거 architecture review, 모듈별 개발 보고서, 최신 통합 보고서 |
+| Android | Kotlin·Compose·Material 3 데모, Room 캐시, debug API 클라이언트, CallScreeningService 구조 | 실제 정책은 모든 전화 허용. AI·음성 대조·실제 보호 없음 |
+| Backend | 제출·상태·Registry·이벤트 REST API, SQLite 저장, 생성 ABI 사용 | 로컬 체인·MOCK_PROOF 경로. 추론·실제 zkML·운영용 번호 승격 API 없음 |
+| Contracts | ThreatRegistry, VerifierAdapter, MockVerifier, 테스트용 번호 승격, 배포·ABI 생성 | 로컬 EVM의 실제 실행 + 명시적 MOCK 검증. 실제 zkML Verifier 없음 |
+| Dashboard | Registry·이벤트·상세·제출 상태, Backend 연동과 MOCK fixture 모드 | 모니터링 UI이며 실제 탐지 모델 없음 |
+| Integration | Android 제출 → Backend → 로컬 Registry → 이벤트 → Dashboard/Android Room | 합성 테스트 데이터. UI 와이어프레임과 별도 진입점. 실제 통화 차단까지 연결되지 않음 |
+| AI / Shared | AI 인터페이스·모듈 구조, 공유 fixture·스키마/DTO 준비 문서 | 실제 모델·지문 추출·완성된 공통 코드 생성 미구현 |
 
-REAL은 HTTP·EVM·저장소 동작을 뜻한다. `MOCK_PROOF`는 암호학적 zkML 증명이 아니다. fixture의 VoiceprintHash와 RiskScore는 합성 테스트 데이터다.
+`REAL`은 해당 구간의 HTTP·EVM·저장소 동작을 의미합니다. `MOCK_PROOF`는 암호학적 증명이 아닙니다. 기존 Python 특징 처리 코드는 `backend/deepvoice/`에 보존되어 있지만, 실제 DeepVoice 탐지 파이프라인의 완성을 뜻하지 않습니다.
 
-## 실행
+## 가장 간단하게 실행하기 — Android UI 데모
 
-환경: JDK 17, Android SDK 35/adb 및 API 29 이상 테스트 기기, Python 3.11+, Foundry 1.8.1/Solidity 0.8.24, Node 22.12+, pnpm 11.19.0.
-각 모듈 README에 설치 방법이 있다. 테스트 전용 에뮬레이터를 사용한다. 통합 실행기는 해당 디버그 앱 데이터를 초기화한다.
+JDK 17과 Android SDK 35를 준비하고 `JAVA_HOME` 및 SDK 경로를 설정합니다. 기기/에뮬레이터는 API 29 이상이 필요합니다. 자세한 설정은 [Android README](android/README.md)를 참고하세요.
 
 ```sh
-# 저장소 루트에서; JAVA_HOME/Android SDK를 먼저 설정
-android/gradlew -p android assembleDebug assembleDebugAndroidTest
-backend/.venv/bin/python integration/run.py --device emulator-5554 --serve
+# 저장소 루트
+./android/gradlew -p android assembleDebug installDebug
+adb shell am start -n org.tridefense.android/.ui.demo.DemoActivity
 ```
 
-다른 터미널:
+**받기 → 게이지 변화 → 정밀 경고 → 통화 종료 → 공유 결과**를 시연합니다. Backend·블록체인·마이크 권한은 필요 없습니다. 음성은 재생하거나 녹음하지 않습니다.
+
+사용자 B 화면은 별도 실행합니다(`-S`는 이 앱의 기존 실행을 종료합니다).
 
 ```sh
-pnpm --dir dashboard install --frozen-lockfile
-pnpm --dir dashboard dev
+# 이미 등록된 악성 번호의 차단 알림 콘셉트
+adb shell am start -S -n org.tridefense.android/.ui.demo.ProtectionDemoActivity
+# 변경된 번호의 통화 중 경고 콘셉트
+adb shell am start -S -n org.tridefense.android/.ui.demo.ProtectionDemoActivity --es scenario changed
 ```
 
-세 번째 터미널에서 실제 Android 제출 결과와 Dashboard 화면을 비교한다:
+## 로컬 통합과 테스트
+
+통합 재현은 [전용 안내](integration/README.md)를 따릅니다. Python 3.11+, Foundry 1.8.1, Node 22.12+, pnpm 11.19.0 및 테스트용 Android 에뮬레이터가 필요합니다. 통합 실행기는 지정한 에뮬레이터의 **이 앱 데이터만 초기화**합니다.
+
+각 모듈 README의 의존성 설치 후:
 
 ```sh
-backend/.venv/bin/python integration/verify_dashboard.py
-```
-
-Dashboard는 `http://127.0.0.1:5173`의 **Backend API** 모드를 사용한다. Mock fixtures 모드는 이 통합 테스트의 데이터 소스가 아니다. 종료할 때 각 서버 터미널에서 Ctrl-C.
-
-## 테스트 및 빌드
-
-```sh
-android/gradlew -p android assembleDebug assembleDebugAndroidTest assembleRelease testDebugUnitTest testReleaseUnitTest lintDebug
+./android/gradlew -p android assembleDebug assembleDebugAndroidTest assembleRelease testDebugUnitTest testReleaseUnitTest lintDebug
 backend/.venv/bin/python -m unittest discover -s backend/tests
-.tools/forge test
+forge test
 pnpm --dir dashboard test
 pnpm --dir dashboard build
 ```
 
-검증 결과: Android JVM debug 29 / release 25, Android 에뮬레이터 통합 1, Backend 21, Contracts 29, Dashboard 17개 테스트 통과. 브라우저 통합 검증 통과. Android debug/release 및 Dashboard build 성공.
-Root `make check`는 초기 Python 모델·Contracts 검사이며 전체 모듈 통합 검사를 대신하지 않는다. 기존 Python 모델은 `backend/deepvoice/`, 기존 모델 테스트는 `tests/`에 보존되어 있다.
+`make check`와 기존 GitHub Actions는 초기 Python/Contracts 검사입니다. Android·Backend·Dashboard 전체 검증을 대신하지 않습니다. 최신 로컬 결과와 과거 E2E 결과는 [제출 검증 기록](docs/submission-readiness.md)에 구분해 기록합니다.
 
-## 남은 범위
+`.tools`, SDK/JDK, 가상환경, `node_modules`, 빌드 산출물, 로컬 DB와 `.env`는 제출 소스에 포함하지 않습니다. 샘플 번호·공개 로컬 Anvil 계정은 테스트 전용입니다.
 
-실제 AI 및 zkML PoC, 실제 Verifier, ERC-4337/테스트넷, 장기 백그라운드 동기화, 기기별 통화 보호 검증은 별도 작업이다. 현재 Room의 MOCK 캐시는 기본 통화 차단 캐시와 분리되어 있다. 다음 작업은 [통합 보고서의 권장 순서](docs/integration-p0-report.md#remaining-blockers-and-recommended-order)를 검토한 뒤 정한다.
+## 다음 구현 순서
 
-
----
-
-# Roadmap
-
-## P0 (현재)
-
-- Android 구조
-- Backend API
-- ThreatRegistry
-- Dashboard
-- Mock Integration
-
-## P1 (멘토링)
-
-- 1차 AI
-- 2차 AI
-- Voiceprint Hash
-- zkML
-- ERC-4337
-
-## P2 (본선)
-
-- 실제 AI 적용
-- Testnet 배포
-- End-to-End Demo
+[구현 명세](docs/implementation-specification.md)의 우선순위를 따릅니다. 실제 입력·권한 및 AI/지문 PoC → 실제 zkML/Verifier → 번호 승격 근거와 동기화·차단 연결 → ERC-4337/테스트넷 통합 → 측정·최적화 순으로 검증합니다. 성능 수치와 운영 보호 효과는 측정 전 보장하지 않습니다.

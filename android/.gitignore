@@ -5,3 +5,8 @@
 local.properties
 *.iml
 .idea/
+
+# Local validation output and manually extracted presentation archives
+docs/demo/build.txt
+docs/protection-demo/build.txt
+docs/protection-demo/protection-ui-assets/

@@ -9,12 +9,14 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
-        <activity android:name=".ui.MainActivity" android:exported="true">
+        <activity android:name=".ui.MainActivity" android:exported="true" />
+        <activity android:name=".ui.demo.DemoActivity" android:exported="true" android:label="Tri-Defense Demo" android:icon="@drawable/demo_icon" android:theme="@style/Theme.TriDefense.Demo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.demo.ProtectionDemoActivity" android:exported="true" android:label="Tri-Defense Protection Demo" android:theme="@style/Theme.TriDefense.Demo" />
         <service
             android:name=".screening.TriDefenseCallScreeningService"
             android:exported="true"

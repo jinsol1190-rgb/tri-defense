@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.TriDefense.Demo" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#0C1513</item>
+        <item name="android:windowSplashScreenBackground">#0C1513</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/demo_icon</item>
+    </style>
+</resources>

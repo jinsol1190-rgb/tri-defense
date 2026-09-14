@@ -1,6 +1,16 @@
-# Tri-Defense Android — P0
+# Tri-Defense Android — P0 + MOCK Demo UI
 
 Android-only preparation of the [implementation specification](../docs/implementation-specification.md), §§3–7. Integration P0 adds debug-only Backend communication and Room ingestion. No real AI, proof generation, direct chain access or complete threat-protection flow is implemented.
+
+## Android Demo UI
+
+The launcher **Tri-Defense Demo** is a **victim-facing submission wireframe** built with Kotlin / Jetpack Compose / Material 3. Answer the simulated unknown-number call with **받기**. A MOCK risk gauge starts changing at 0.2 seconds (inside the 0.5-second UI target), followed by an in-call precise warning and the end-call action. After ending the call, the same surface shows sharing pending and then **voice-feature sharing complete / phone number not registered**.
+
+The scenario uses an unknown number. A phone number is not promoted just because it is unknown: promotion needs separate verification. Spoofed-contact numbers must likewise be excluded; that alternate scenario is documented but is not a second selectable demo. No phone-blocking success is claimed.
+
+All scores and sharing states are **MOCK**. The 8-second precise warning and 12-second shared-result timings are illustrative pacing, not requirements or measured AI/chain latency. The first-stage gauge appears independently at 0.2 seconds. This is an app-rendered phone wireframe, not the system dialer; no actual audio, inference, proof, HTTP, Room write, chain registration or protection occurs.
+
+Run `./gradlew assembleDebug installDebug`, then `adb shell am start -n org.tridefense.android/.ui.demo.DemoActivity`. Backend/Anvil are not needed. The previous `.ui.MainActivity` remains the explicit P0 role-testing screen. See [demo report and verification](docs/demo-ui-report.md) and [screenshots and demo video](docs/demo/README.md).
 
 ## Implementation status
 
@@ -13,7 +23,7 @@ Android-only preparation of the [implementation specification](../docs/implement
 | LiveAudioSource | SAMPLE placeholder | Explicitly unavailable; no recording or microphone permission |
 | SampleAudioSource | SAMPLE adapter | Only returns caller-supplied sample input, otherwise unavailable; no bundled/generated audio |
 | AI interfaces | SAMPLE placeholder implementation | All methods return Unsupported; no risk score, hash, match or HUMAN verdict produced |
-| UI | SAMPLE placeholder | Capability limitations and real screening role state; no invented risk gauge value |
+| UI | MOCK presentation | Compose / Material 3 four-state victim-facing wireframe with a clearly labelled timed MOCK warning; original role-testing screen retained |
 | DI | REAL skeleton | App-scoped manual constructor injection, lazy Room initialization |
 
 The requested preparation and MOCK integration scope is complete: debug/release/app-test APK builds, 29 JVM/Robolectric tests and one actual API-35 device integration test passed; Lint has 0 errors. The broader real Android device protection PoC remains IN PROGRESS. A live-device screening/blocking demonstration is not provided by this allow-all skeleton.
@@ -42,7 +52,7 @@ The application asks for the screening role only after tapping its button. Denia
 
 The local build environment used for this task is under ignored `.tools/`. On this machine only, prefix Gradle commands with `JAVA_HOME="$PWD/.tools/jdk/Contents/Home"`; ignored `local.properties` points to `.tools/sdk`. Other machines should use their own SDK/JDK, not commit these paths or tool downloads.
 
-The repository root Makefile/CI are outside this task and still cover only the old Python/Solidity modules. Use this module's commands for Android. The root README's historical Android placeholder table was not edited under the Android-only constraint; this README is the current Android status.
+The root Makefile/CI cover the original Python/Solidity modules only. Use this module's commands for Android and the root submission guide for cross-module verification.
 
 ## Structure and ownership
 
@@ -56,12 +66,13 @@ app/src/main/
     ai/                         logical results, interfaces, unsupported implementation
     screening/                  service and allow-all policy boundary
     registry/                   Room cache only, not Registry business rules
-    ui/                         placeholder activity
+    ui/                         original role-testing activity
+    ui/demo/                    isolated submission wireframe
   res/                          strings and layout
 app/src/test/                   JVM/Robolectric behavior tests
 app/src/debug/                  local MOCK HTTP / Room integration screen
 app/src/testDebug/              integration and migration tests
-app/src/androidTest/            Room smoke and actual HTTP integration tests
+app/src/androidTest/            wireframe UI, Room smoke and actual HTTP integration tests
 app/schemas/                    exported Room versioned schema
 build.gradle.kts, settings.gradle.kts, gradle.properties
 gradle/wrapper/, gradlew, gradlew.bat
@@ -83,3 +94,14 @@ See [development report](docs/development-report.md) for verified results and re
 ## Integration P0 update
 
 `app/src/debug/` contains the local-only HTTP client, fixture loader, foreground synchronizer and clearly marked MOCK control screen. Release builds exclude these classes and INTERNET permission. Room schema 2 adds deployment identity and an opaque Backend cursor; pages write records/events/cursor atomically. The debug database is separate from the default screening cache. Tests cover duplicate pages, mismatch rejection, outage/reorg behavior and migration. See [run instructions](../integration/README.md) and [integration report](../docs/integration-p0-report.md). Earlier development-report evidence describes the preceding standalone P0 milestone.
+
+## User B protection concept screens (MOCK only)
+
+`ProtectionDemoActivity` is a separate presentation entry point, without a launcher entry or changes to the user-A demo. It illustrates (1) an already registered malicious number's pre-ring blocking notification and sample record, or (2) a changed number's in-call voice-similarity warning. Both explicitly state that no actual blocking or voice matching occurs. The selector is a presenter-only intent extra, not a product setting or API.
+
+```sh
+adb shell am start -S -n org.tridefense.android/.ui.demo.ProtectionDemoActivity
+adb shell am start -S -n org.tridefense.android/.ui.demo.ProtectionDemoActivity --es scenario changed
+```
+
+[User B screenshots and limitations](docs/protection-demo/README.md). Run `ProtectionDemoTest` with the same instrumentation command used for `DemoUiTest`. No call, permission, model, Backend, Room or contract is invoked. Registered-number lookup, actual screening, notifications and voice matching remain unimplemented.
