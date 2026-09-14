@@ -1,0 +1,411 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "adapter",
+        "type": "address",
+        "internalType": "contract VerifierAdapter"
+      },
+      {
+        "name": "minRiskScore",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "promotionAuthority",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "testPhoneKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "testNumberEvidence",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "LOCAL_CHAIN_ID",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_RISK_SCORE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_RISK_SCORE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "PROMOTION_AUTHORITY",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "TEST_NUMBER_EVIDENCE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "TEST_PHONE_KEY",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "VERIFIER_ADAPTER",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract VerifierAdapter"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "exists",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getThreat",
+    "inputs": [
+      {
+        "name": "threatId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ThreatRegistry.ThreatRecord",
+        "components": [
+          {
+            "name": "threatId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "voiceprintHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "riskScore",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "registeredAt",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "zkProof",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isBlacklisted",
+    "inputs": [
+      {
+        "name": "phoneKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "promoteToBlacklist",
+    "inputs": [
+      {
+        "name": "threatId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "phoneKey",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerThreat",
+    "inputs": [
+      {
+        "name": "voiceprintHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "riskScore",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "proof",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "publicInputs",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "threatId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "usedSubmission",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "BlacklistPromoted",
+    "inputs": [
+      {
+        "name": "threatId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "phoneKey",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ThreatRegistered",
+    "inputs": [
+      {
+        "name": "threatId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "voiceprintHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "riskScore",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      },
+      {
+        "name": "registeredAt",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyBlacklisted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BelowRiskThreshold",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DuplicateSubmission",
+    "inputs": [
+      {
+        "name": "threatId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidConfiguration",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidProof",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRiskScore",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidVoiceprintHash",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LocalPromotionOnly",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PublicInputMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ThreatNotFound",
+    "inputs": [
+      {
+        "name": "threatId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "TimestampOverflow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnapprovedTestNumber",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
+  }
+]

@@ -1,98 +1,129 @@
-# Tri-Defense — P0 development scaffold
+# Tri-Defense
 
-현재 작업 범위는 개발용 저장소 구조·빌드 설정·placeholder 준비다.
-Android/AI/zkML PoC 및 P1/P2 통합 기능은 구현하지 않았다.
-구현 명세(Codex)와 제안서는 현재 저장소에 없으므로 플랫폼·모델·API를 임의로 선택하지 않았다.
+> zkML 기반 탈중앙화 딥보이스 실시간 집단 방어 네트워크
 
-## 상태
+Tri-Defense는 **한 명이 탐지한 딥보이스 보이스피싱 위협을 블록체인을 통해 다른 사용자에게 즉시 공유하여 연쇄 피해를 방지하는 Web3 보안 시스템**입니다.
 
-| 모듈 | 구분 | 현재 상태 |
-| --- | --- | --- |
-| android/ | SAMPLE | 역할 문서만 존재; 앱/Gradle 빌드 없음 |
-| ai/ | SAMPLE | 전처리·경량/정밀 모델·voiceprint·평가 폴더만 존재 |
-| backend/ | REAL / SAMPLE | 기존 데이터 모델 / 미구현 placeholder; 서비스 없음 |
-| contracts/ | REAL / SAMPLE | 기존 claim Registry / Verifier·배포 placeholder |
-| dashboard/ | SAMPLE | 시각화 역할 문서만 존재; 앱 빌드 없음 |
-| shared/ | SAMPLE | DTO·스키마·상수·API 계약용 폴더; 계약 정의 없음 |
-| docs/ | REAL | 구조·환경·제약·검증 기록 |
+## 3단계 보안 구조
 
-SAMPLE은 구조 예시이며 실행 가능한 기능이나 AI 결과를 뜻하지 않는다.
-기존 Registry는 Proof를 검증하지 않는다. Tri-Defense의 검증된 위협 Registry 요건을 충족하지 않는다.
-기존 코드는 보존했으며 AI·블록체인·백엔드 로직을 추가하지 않았다.
+### 1. 1차 경량 탐지
+- 온디바이스 AI 기반 위험도 분석
+- 위험도에 따라 2차 정밀 분석 여부 결정
 
-## 개발 환경 및 빌드
+### 2. 2차 정밀 검증
+- Voiceprint Hash 생성
+- Artifact 분석
+- zkML 기반 AI 연산 무결성 증명
 
-필수: Python 3.9 이상(`venv`, `pip` 포함), Make, Foundry 1.8.1.
-Solidity 0.8.24는 Foundry 설정으로 선택한다. 최초 설치/컴파일에는 네트워크가 필요할 수 있다.
-Python 패키지 빌드의 `setuptools>=61`은 pip의 격리 빌드 환경에 설치하므로 시스템 Python을 변경하지 않는다.
-런타임 외부 Python 의존성은 없다.
-
-```sh
-make setup
-make check
-```
-
-- `make setup`: `.venv` 생성, 기존 Python 패키지 설치, 의존성 검사.
-- `make build`: Python wheel(`dist/`) 및 기존 Solidity 코드(`out/`) 빌드.
-- `make test`: 설치된 Python 패키지 테스트, Solidity 포맷 검사와 Foundry 테스트.
-- 소스를 변경하면 `make setup`으로 설치본을 갱신한 뒤 검사한다.
-- `.tools/forge`가 있으면 자동 사용한다. 그 외에는 PATH의 `forge`를 사용한다.
-  다른 위치는 `make check FORGE=/absolute/path/to/forge`로 지정한다.
-- Android·AI·dashboard·shared는 문서 placeholder이며 빌드 성공 대상으로 계산하지 않는다.
-- 실행할 전체 앱/서버는 아직 없다.
-
-환경 검증과 남은 작업은 [P0 준비 보고서](docs/p0-preparation.md)를 참고한다.
-아래는 보존된 기존 PoC 설명이며, 후속 작업 제안은 최신 AGENTS.md와 구현 명세 검토를 우선한다.
+### 3. 블록체인 집단 방어
+- ThreatRegistry 등록
+- 다른 사용자에게 실시간 전파
 
 ---
 
-# Deepvoice Threat Registry PoC
+## 현재 구현 상태 (P0)
 
-‘Web3 시대의 블록체인 AI 융합 해커톤’ 트랙1: AI + 블록체인 융합 서비스.
+✅ Android
+✅ Backend
+✅ Smart Contract
+✅ Dashboard
+✅ End-to-End Mock Integration
 
-통화 중 딥보이스 탐지 결과의 핵심 데이터를 블록체인에 기록하고,
-등록 이후 중앙 DB 기록의 변조 여부를 비교할 수 있도록 하는 프로젝트다.
-블록체인은 AI 판단의 정확성을 보장하지 않는다.
+> 현재는 **P0(Mock 기반 통합)** 상태이며,
+> 실제 AI, zkML, ERC-4337은 멘토링 및 본선 기간에 구현 예정입니다.
 
-## 현재 구현 범위 (1~4단계)
+---
 
-- Repository scaffold 및 2단계 검증 placeholder
-- Python ThreatRecord 모델
-- Solidity ThreatRegistry (SUSPECTED 등록 및 조회)
-- Python 모델 테스트 및 Foundry 테스트
+# Tri-Defense — Integration P0
 
-실제 AI, Mock Detector, 통화 연동, FastAPI, SQLite, web3.py,
-DB 변조 탐지 데모와 테스트넷 배포는 **아직 구현하지 않았다**.
-검증 placeholder는 성공 결과를 반환하지 않고 NotImplementedError를 발생시킨다.
-WAV는 향후 통화 음성을 대신하는 테스트 입력이며 파일 업로드 서비스가 아니다.
+Source of Truth: [구현 명세 (Codex)](docs/implementation-specification.md). 제안서와 README가 충돌하면 구현 명세를 우선한다.
+
+**로컬 MOCK 통합 완료:** Android 디버그 앱 → Backend API → VerifierAdapter / MockVerifier → ThreatRegistry → 이벤트 → Dashboard 및 Android Room.
+Android 에뮬레이터가 실제 HTTP 요청을 보내고, 로컬 EVM에서 발생한 이벤트를 두 클라이언트가 조회하는 경로를 검증했다.
+AI·zkML·ERC-4337·실제 통화 보호는 구현하지 않았다. 전체 명세의 완료를 의미하지 않는다.
+
+[통합 보고서 · 시퀀스 다이어그램 · 남은 차단 요인](docs/integration-p0-report.md) · [실행 및 테스트](integration/README.md)
+
+## 모듈 상태
+
+| 모듈 | 구분 | 현재 상태 |
+| --- | --- | --- |
+| [android/](android/README.md) | REAL 연결 / SAMPLE 입력 | Kotlin·Room·CallScreeningService scaffold, debug 전용 MOCK 제출·Registry 동기화. 통화 정책은 allow-all |
+| [backend/](backend/README.md) | REAL API / MOCK_PROOF | 제출·상태·Registry·이벤트 API, 생성 ABI 사용, 로컬 트랜잭션 |
+| [contracts/](contracts/README.md) | REAL 로컬 EVM / MOCK 검증 | ThreatRegistry, VerifierAdapter, 정확한 fixture만 허용하는 MockVerifier, 배포·ABI |
+| [dashboard/](dashboard/README.md) | REAL 조회 / MOCK_PROOF 표시 | React + Vite, Registry·이벤트·상세·제출 상태, 별도 MOCK 표시 fixture |
+| ai/ | SAMPLE scaffold | 전처리·경량/정밀 모델·voiceprint·평가 역할 문서만 존재 |
+| [shared/](shared/README.md) | SAMPLE scaffold / 통합 fixture 계약 | 기존 DTO·스키마 폴더와 [로컬 fixture 규약](shared/fixtures/README.md) |
+| docs/ | REAL 문서 | 구현 명세, 과거 architecture review, 모듈별 개발 보고서, 최신 통합 보고서 |
+
+REAL은 HTTP·EVM·저장소 동작을 뜻한다. `MOCK_PROOF`는 암호학적 zkML 증명이 아니다. fixture의 VoiceprintHash와 RiskScore는 합성 테스트 데이터다.
 
 ## 실행
 
-Python 3.9 이상, Foundry v1.8.1, Solidity 0.8.24.
-Python 모델 테스트에는 외부 패키지가 필요 없다.
+환경: JDK 17, Android SDK 35/adb 및 API 29 이상 테스트 기기, Python 3.11+, Foundry 1.8.1/Solidity 0.8.24, Node 22.12+, pnpm 11.19.0.
+각 모듈 README에 설치 방법이 있다. 테스트 전용 에뮬레이터를 사용한다. 통합 실행기는 해당 디버그 앱 데이터를 초기화한다.
 
 ```sh
-PYTHONPATH=backend python3 -m unittest discover -s tests -v
-forge fmt --check
-forge test -vv
+# 저장소 루트에서; JAVA_HOME/Android SDK를 먼저 설정
+android/gradlew -p android assembleDebug assembleDebugAndroidTest
+backend/.venv/bin/python integration/run.py --device emulator-5554 --serve
 ```
 
-이 작업 환경에서 Foundry 바이너리는 gitignore 처리된 `.tools/`에 설치했다.
-해당 환경은 `forge` 대신 `.tools/forge`를 사용하면 된다.
-다른 환경에서는 [Foundry 공식 설치 안내](https://getfoundry.sh/getting-started/installation)를 따른다.
-최초 컴파일에는 Solidity 컴파일러 다운로드를 위한 네트워크가 필요하다.
+다른 터미널:
 
-## 구조
-
-```text
-backend/deepvoice/models.py        Python 데이터 계약
-backend/deepvoice/verification/    미구현 2단계 분석 확장 지점
-contracts/src/ThreatRegistry.sol  변경/삭제 없는 Registry
-contracts/test/                   Foundry 단위/퍼즈 테스트
-tests/                            Python 모델 테스트
-docs/architecture.md              필드 표현, 중복 정책, 후속 범위
+```sh
+pnpm --dir dashboard install --frozen-lockfile
+pnpm --dir dashboard dev
 ```
 
-온체인에는 원본 음성을 저장하지 않는다. audioHash는 SHA-256이며 동일 바이트
-재확인 용도로만 사용한다. 동일 화자, 동일 공격자, 재인코딩 음성 식별은 지원하지 않는다.
-자세한 정책은 [데이터 계약](docs/architecture.md)을 참고한다.
+세 번째 터미널에서 실제 Android 제출 결과와 Dashboard 화면을 비교한다:
+
+```sh
+backend/.venv/bin/python integration/verify_dashboard.py
+```
+
+Dashboard는 `http://127.0.0.1:5173`의 **Backend API** 모드를 사용한다. Mock fixtures 모드는 이 통합 테스트의 데이터 소스가 아니다. 종료할 때 각 서버 터미널에서 Ctrl-C.
+
+## 테스트 및 빌드
+
+```sh
+android/gradlew -p android assembleDebug assembleDebugAndroidTest assembleRelease testDebugUnitTest testReleaseUnitTest lintDebug
+backend/.venv/bin/python -m unittest discover -s backend/tests
+.tools/forge test
+pnpm --dir dashboard test
+pnpm --dir dashboard build
+```
+
+검증 결과: Android JVM debug 29 / release 25, Android 에뮬레이터 통합 1, Backend 21, Contracts 29, Dashboard 17개 테스트 통과. 브라우저 통합 검증 통과. Android debug/release 및 Dashboard build 성공.
+Root `make check`는 초기 Python 모델·Contracts 검사이며 전체 모듈 통합 검사를 대신하지 않는다. 기존 Python 모델은 `backend/deepvoice/`, 기존 모델 테스트는 `tests/`에 보존되어 있다.
+
+## 남은 범위
+
+실제 AI 및 zkML PoC, 실제 Verifier, ERC-4337/테스트넷, 장기 백그라운드 동기화, 기기별 통화 보호 검증은 별도 작업이다. 현재 Room의 MOCK 캐시는 기본 통화 차단 캐시와 분리되어 있다. 다음 작업은 [통합 보고서의 권장 순서](docs/integration-p0-report.md#remaining-blockers-and-recommended-order)를 검토한 뒤 정한다.
+
+
+---
+
+# Roadmap
+
+## P0 (현재)
+
+- Android 구조
+- Backend API
+- ThreatRegistry
+- Dashboard
+- Mock Integration
+
+## P1 (멘토링)
+
+- 1차 AI
+- 2차 AI
+- Voiceprint Hash
+- zkML
+- ERC-4337
+
+## P2 (본선)
+
+- 실제 AI 적용
+- Testnet 배포
+- End-to-End Demo

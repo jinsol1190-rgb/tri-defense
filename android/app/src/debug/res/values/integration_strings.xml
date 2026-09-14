@@ -1,0 +1,9 @@
+<resources>
+    <string name="integration_heading">Tri-Defense · Mock integration</string>
+    <string name="integration_notice">SAMPLE / MOCK_PROOF — no AI, zkML or ERC-4337. Ordinary local transactions. All calls remain allowed.</string>
+    <string name="integration_fixture_hint">Paste generated integration fixture JSON</string>
+    <string name="integration_load">Load SAMPLE fixture</string>
+    <string name="integration_submit">Submit MOCK threat</string>
+    <string name="integration_sync">Refresh Registry cache</string>
+    <string name="integration_waiting">Load a fixture to connect to the local Backend.</string>
+</resources>

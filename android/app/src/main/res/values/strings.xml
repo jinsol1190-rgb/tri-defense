@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Tri-Defense P0</string>
+    <string name="heading">Tri-Defense · Android P0</string>
+    <string name="placeholder_notice">SAMPLE UI — 개발용 골격</string>
+    <string name="capabilities">AI: 미구현 · 위험 점수 없음\n오디오: LIVE 입력 미지원 · 샘플 미제공\nRoom: 로컬 캐시 구조 준비 · 등록 데이터 없음\n보호: 미구현 · 모든 통화 허용</string>
+    <string name="role_held">통화 스크리닝 역할: 허용됨 (차단 기능 미구현)</string>
+    <string name="role_available">통화 스크리닝 역할: 미허용</string>
+    <string name="role_unavailable">통화 스크리닝 역할: 이 기기에서 사용 불가</string>
+    <string name="request_role">통화 스크리닝 역할 요청</string>
+</resources>
