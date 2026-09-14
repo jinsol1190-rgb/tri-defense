@@ -10,7 +10,7 @@ help:
 	@echo "make build  - build Python wheel and existing Solidity contracts"
 	@echo "make test   - run existing Python tests and Solidity format/tests"
 	@echo "make check  - build and test; requires make setup first"
-	@echo "Android, AI, dashboard and shared are documentation placeholders, not build targets."
+	@echo "This root target covers Python/Contracts only; see module READMEs for Android, Backend and Dashboard."
 
 setup:
 	$(PYTHON) -m venv $(VENV)
