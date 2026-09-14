@@ -1,14 +1,13 @@
-# Tri-Defense — 초기 PoC 제출 소스코드
+# Tri-Defense 
 
 > 한 명의 딥보이스 탐지를 다른 사용자의 방어로 연결하는 3단계 보안 네트워크
 
-이 저장소는 해커톤 **초기 구현(P0)** 결과입니다. Android·Backend·스마트 컨트랙트·Dashboard의 **로컬 MOCK 통합**과 발표용 **Android 사용자 경험 데모**를 포함합니다. 완성된 보안 서비스가 아닙니다.
+이 저장소는 해커톤 **초기 구현(P0)** 결과입니다. Android·Backend·스마트 컨트랙트·Dashboard의 **로컬 MOCK 통합**과 **Android 사용자 경험 데모**를 포함합니다. 완성된 보안 서비스가 아닙니다.
 
-**실제 AI 추론, zkML 증명 생성·암호학적 검증, ERC-4337, 실통화 차단, 운영 배포는 미구현입니다.** 화면의 점수·음성 지문·Proof·보호 결과는 실제 탐지 성능이나 실제 보호를 입증하지 않습니다.
 
 [구현 명세 — Source of Truth](docs/implementation-specification.md) · [제출 안내·검증 결과](docs/submission-readiness.md) · [로컬 통합 보고서](docs/integration-p0-report.md)
 
-## 심사위원용 빠른 안내
+## 빠른 안내
 
 | 확인할 내용 | 위치 |
 | --- | --- |
